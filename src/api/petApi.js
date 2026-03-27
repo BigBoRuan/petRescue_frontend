@@ -8,6 +8,16 @@ export function adoptGet(id) {
   return unwrapData(http.get('/pet/adopt/get', { params: { id: String(id) } }));
 }
 
+/** 可领养宠物数量最多的医院 TOP N（无需登录） */
+export function adoptHospitalRank(limit = 5) {
+  return unwrapData(http.get('/pet/adopt/hospital/rank', { params: { limit } }));
+}
+
+/** 用户端医院介绍（已通过审核，无需登录） */
+export function adoptHospitalPublic(id) {
+  return unwrapData(http.get('/pet/adopt/hospital/public', { params: { id: String(id) } }));
+}
+
 export function petInfoPage(body) {
   return unwrapData(http.post('/pet/info/page', body));
 }

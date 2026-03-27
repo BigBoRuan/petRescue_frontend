@@ -9,7 +9,16 @@
 <style>
 /* 前台偏 B 站：浅底、粉强调；保留原变量兼容旧页 */
 :root {
-  --bili-page: #f6f7f9;
+  /* 纯色兜底（不支持渐变或打印时） */
+  --bili-page: #eef0f6;
+  /* 养眼渐变：灰蓝 → 淡紫 → 极浅杏粉，饱和度低、对比柔和 */
+  --bili-page-gradient: linear-gradient(
+    165deg,
+    #e8ecf4 0%,
+    #f0edf8 36%,
+    #faf5f7 68%,
+    #f5f3ef 100%
+  );
   --bili-surface: #ffffff;
   --bili-text: #18191c;
   --bili-muted: #9499a0;
@@ -29,10 +38,33 @@
 html,
 body,
 #app {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  background: var(--bili-page);
+  background-color: var(--bili-page);
+  background-image: var(--bili-page-gradient);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
   color: var(--bili-text);
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+
+/* 管理端主按钮与前台统一为品牌粉（Arco 默认蓝改为粉） */
+.admin-layout .arco-btn-primary:not(.arco-btn-disabled),
+.admin-layout .arco-btn-primary:not(.arco-btn-disabled):focus-visible {
+  background-color: var(--bili-pink) !important;
+  border-color: var(--bili-pink) !important;
+  color: #fff !important;
+}
+.admin-layout .arco-btn-primary:not(.arco-btn-disabled):hover {
+  background-color: #ff85a8 !important;
+  border-color: #ff85a8 !important;
+}
+
+/* 品牌色标签（替代 arcoblue） */
+.bili-tag.arco-tag {
+  background: var(--bili-pink-soft) !important;
+  color: var(--bili-pink) !important;
+  border-color: transparent !important;
 }
 </style>

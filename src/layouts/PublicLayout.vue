@@ -44,12 +44,13 @@ watch(
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--bili-page);
+  /* 透出根节点渐变，避免再铺一层纯色 */
+  background: transparent;
 }
 .public-main {
   flex: 1;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 20px 20px 40px;
   box-sizing: border-box;

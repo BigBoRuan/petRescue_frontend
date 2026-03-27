@@ -48,6 +48,57 @@
       </a-form>
     </a-card>
 
+    <a-card
+      v-if="user && user.role === ROLE.USER"
+      class="adopt-card"
+      :bordered="false"
+      title="我的领养"
+    >
+      <p class="adopt-intro">查看申请审核进度、已成功领养的宠物及回访安排（流程在全部回访完成后结束）。</p>
+      <a-typography-title :heading="6" class="adopt-subtitle">领养申请</a-typography-title>
+      <a-table
+        :columns="applyCols"
+        :data="myApplies"
+        :loading="adoptLoading"
+        :pagination="false"
+        row-key="id"
+        size="small"
+      >
+        <template #applyStatus="{ record }">
+          <a-tag v-if="record.applyStatus === 'PENDING'" color="orange">待审核</a-tag>
+          <a-tag v-else-if="record.applyStatus === 'APPROVED'" color="green">已通过</a-tag>
+          <a-tag v-else-if="record.applyStatus === 'REJECTED'" color="red">已拒绝</a-tag>
+          <span v-else>{{ record.applyStatus }}</span>
+        </template>
+      </a-table>
+
+      <a-typography-title :heading="6" class="adopt-subtitle">已领养宠物</a-typography-title>
+      <a-table
+        :columns="petCols"
+        :data="myPets"
+        :loading="adoptLoading"
+        :pagination="false"
+        row-key="adoptionRecordId"
+        size="small"
+      >
+        <template #pet="{ record }">
+          <span>{{ record.pet?.petName || '—' }}</span>
+        </template>
+        <template #flow="{ record }">
+          <a-tag v-if="record.adoptionFlowFinished" color="green">回访已完成</a-tag>
+          <a-tag v-else class="bili-tag">回访进行中</a-tag>
+        </template>
+        <template #visits="{ record }">
+          <div class="visit-mini">
+            <div v-for="v in record.visits || []" :key="v.id" class="visit-mini-row">
+              第{{ v.visitCount }}次：
+              <span :class="{ pend: v.pending }">{{ v.pending ? '待回访' : '已完成' }}</span>
+            </div>
+          </div>
+        </template>
+      </a-table>
+    </a-card>
+
     <a-modal
       v-model:visible="avatarModalVisible"
       title="更换头像"
@@ -95,15 +146,68 @@ import { useUserStore } from '@/stores/user';
 import { useUiStore } from '@/stores/ui';
 import * as userApi from '@/api/userApi';
 import * as fileApi from '@/api/fileApi';
+import * as adoptionApi from '@/api/adoptionApi';
 import { publicFileUrl, isStorableImageRef } from '@/utils/publicAssetUrl';
+import { ROLE } from '@/constants/roles';
 
 const userStore = useUserStore();
 const uiStore = useUiStore();
 const { user, hydrated } = storeToRefs(userStore);
 
-onMounted(() => {
-  if (!hydrated.value) userStore.fetchLoginUser();
+const adoptLoading = ref(false);
+const myApplies = ref([]);
+const myPets = ref([]);
+
+const applyCols = [
+  { title: '宠物', dataIndex: 'petName', width: 120 },
+  {
+    title: '所在地区',
+    dataIndex: 'applicantRegion',
+    width: 140,
+    ellipsis: true,
+    tooltip: true,
+  },
+  { title: '状态', slotName: 'applyStatus', width: 100 },
+  { title: '拒绝原因', dataIndex: 'rejectReason', ellipsis: true, tooltip: true },
+  { title: '申请时间', dataIndex: 'applyTime', width: 170 },
+];
+
+const petCols = [
+  { title: '宠物', slotName: 'pet', width: 120 },
+  { title: '领养时间', dataIndex: 'adoptTime', width: 170 },
+  { title: '流程', slotName: 'flow', width: 110 },
+  { title: '回访', slotName: 'visits', minWidth: 160 },
+];
+
+async function loadAdoptionData() {
+  if (!user.value || user.value.role !== ROLE.USER) return;
+  adoptLoading.value = true;
+  try {
+    const [applies, page] = await Promise.all([
+      adoptionApi.adoptionApplyMyList(),
+      adoptionApi.adoptionMyPetsPage({ current: 1, pageSize: 50 }),
+    ]);
+    myApplies.value = Array.isArray(applies) ? applies : [];
+    myPets.value = page?.records || [];
+  } catch {
+    myApplies.value = [];
+    myPets.value = [];
+  } finally {
+    adoptLoading.value = false;
+  }
+}
+
+onMounted(async () => {
+  if (!hydrated.value) await userStore.fetchLoginUser();
+  await loadAdoptionData();
 });
+
+watch(
+  () => user.value?.id,
+  () => {
+    loadAdoptionData();
+  }
+);
 
 function openAuth() {
   uiStore.openAuthModal({ tab: 'login' });
@@ -321,5 +425,26 @@ async function submit({ errors }) {
 .bili-primary {
   background: var(--bili-pink, #fb7299) !important;
   border-color: var(--bili-pink, #fb7299) !important;
+}
+.adopt-card {
+  margin-top: 20px;
+  max-width: 900px;
+  border-radius: 10px;
+}
+.adopt-intro {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--bili-muted, #9499a0);
+  line-height: 1.5;
+}
+.adopt-subtitle {
+  margin: 0 0 10px !important;
+}
+.visit-mini {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.visit-mini-row .pend {
+  color: #ff7a45;
 }
 </style>

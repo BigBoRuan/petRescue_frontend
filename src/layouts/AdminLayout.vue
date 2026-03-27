@@ -15,6 +15,10 @@
           <template #icon><IconImage /></template>
           宠物档案
         </a-menu-item>
+        <a-menu-item v-if="showAdoption" key="adoption">
+          <template #icon><IconFile /></template>
+          领养与回访
+        </a-menu-item>
         <a-menu-item v-if="showUsers" key="users">
           <template #icon><IconUserGroup /></template>
           用户管理
@@ -56,6 +60,7 @@ import {
   IconEdit,
   IconHeart,
   IconImage,
+  IconFile,
 } from '@arco-design/web-vue/es/icon';
 import { useUserStore } from '@/stores/user';
 import { ROLE } from '@/constants/roles';
@@ -75,6 +80,7 @@ const showRescue = computed(() =>
   [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
 );
 const showPets = computed(() => [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value));
+const showAdoption = computed(() => [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value));
 const showUsers = computed(() => [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value));
 const showHospitals = computed(() => role.value === ROLE.SUPER_ADMIN);
 const showHospitalSetting = computed(() =>
@@ -114,6 +120,7 @@ const activeKey = computed(() => {
   const p = route.path;
   if (p.startsWith('/admin/rescue')) return 'rescue';
   if (p.startsWith('/admin/pets')) return 'pets';
+  if (p.startsWith('/admin/adoption')) return 'adoption';
   if (p.startsWith('/admin/users')) return 'users';
   if (p.startsWith('/admin/hospitals')) return 'hospitals';
   if (p.startsWith('/admin/hospital-setting')) return 'hospital-setting';
@@ -125,6 +132,7 @@ function onMenuClick(key) {
     dash: '/admin',
     rescue: '/admin/rescue',
     pets: '/admin/pets',
+    adoption: '/admin/adoption',
     users: '/admin/users',
     hospitals: '/admin/hospitals',
     'hospital-setting': '/admin/hospital-setting',
@@ -163,6 +171,14 @@ onMounted(async () => {
 <style scoped>
 .admin-layout {
   min-height: 100vh;
+  background-color: var(--bili-page, #eef0f6);
+  background-image: var(--bili-page-gradient, none);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+}
+.admin-layout :deep(> .arco-layout) {
+  background: transparent !important;
 }
 .admin-sider {
   background: #fff !important;
@@ -203,6 +219,6 @@ onMounted(async () => {
 .admin-content {
   padding: 20px 22px 32px;
   min-height: calc(100vh - 56px);
-  background: var(--bili-page, #f6f7f9);
+  background: transparent;
 }
 </style>

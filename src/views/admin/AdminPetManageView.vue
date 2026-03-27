@@ -151,7 +151,6 @@
 <script setup>
 import { computed, reactive, ref } from 'vue';
 import {
-  PET_AGE_OPTIONS,
   PET_GENDER_OPTIONS,
   PET_HEALTH_STATUS_OPTIONS,
   mergeLegacyAgeOption,

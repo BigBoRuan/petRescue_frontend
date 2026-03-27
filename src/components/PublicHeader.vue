@@ -35,13 +35,15 @@
       </nav>
 
       <div class="header-right">
-        <a-trigger v-if="!user" position="br" trigger="hover" :popup-translate="[0, 8]">
+        <!-- position=bottom：弹层相对触发器水平居中（对齐导航栏头像中心），避免 br 贴右侧错位 -->
+        <a-trigger v-if="!user" position="bottom" trigger="hover" :popup-translate="[0, 10]">
           <div class="avatar-slot" role="button" tabindex="0" @click="openLogin" @keyup.enter="openLogin">
             <div class="avatar-ring avatar-ring--guest">
               <IconUser class="guest-icon" />
             </div>
           </div>
           <template #content>
+            <!-- 未登录：仅保留导航栏上的触发头像，卡片内不再重复图标 -->
             <div class="hover-card hover-card--guest">
               <p class="hover-title">你还未登录</p>
               <p class="hover-desc">登录后可查看宠物详情或进入救助登记</p>
@@ -50,7 +52,7 @@
           </template>
         </a-trigger>
 
-        <a-trigger v-else position="br" trigger="hover" :popup-translate="[0, 8]">
+        <a-trigger v-else position="bottom" trigger="hover" :popup-translate="[0, 10]">
           <div class="avatar-slot" role="button" tabindex="0" @click="goProfile" @keyup.enter="goProfile">
             <div class="avatar-ring">
               <img
@@ -64,7 +66,8 @@
             </div>
           </div>
           <template #content>
-            <div class="hover-card hover-card--user">
+            <!-- 已登录：头像仅在导航栏触发器上展示一份，浮层内只显示昵称与操作 -->
+            <div class="hover-card">
               <p class="hover-name">{{ displayName }}</p>
               <p class="hover-role">{{ roleLabel }}</p>
               <div class="hover-actions">
@@ -248,12 +251,14 @@ async function onLogout() {
   color: var(--bili-pink);
 }
 .hover-card {
-  min-width: 200px;
-  padding: 12px 14px;
-  border-radius: 10px;
+  min-width: 240px;
+  max-width: 280px;
+  padding: 12px 16px 14px;
+  border-radius: 12px;
   background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
   border: 1px solid var(--bili-line);
+  text-align: center;
 }
 .hover-title {
   margin: 0 0 4px;
@@ -262,18 +267,19 @@ async function onLogout() {
   color: var(--bili-text);
 }
 .hover-desc {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: 12px;
   color: var(--bili-muted);
   line-height: 1.45;
 }
 .hover-name {
-  margin: 0;
-  font-weight: 600;
-  font-size: 15px;
+  margin: 0 0 4px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--bili-pink);
 }
 .hover-role {
-  margin: 4px 0 8px;
+  margin: 0 0 12px;
   font-size: 12px;
   color: var(--bili-muted);
 }
@@ -281,6 +287,10 @@ async function onLogout() {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  justify-content: center;
+  border-top: 1px solid var(--bili-line);
+  padding-top: 10px;
+  margin-top: 4px;
 }
 .bili-btn {
   background: var(--bili-pink) !important;

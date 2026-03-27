@@ -8,6 +8,7 @@ function isPublicAdoptPetPath(path) {
     const parts = path.split('/').filter(Boolean);
     return parts.length === 2 && parts[0] === 'pets';
   }
+  if (path.startsWith('/pet-hospital/')) return true;
   return false;
 }
 
@@ -37,6 +38,12 @@ const routes = [
         name: 'PetDetail',
         component: () => import('@/views/pets/PetDetailView.vue'),
         meta: { title: '宠物详情' },
+      },
+      {
+        path: 'pet-hospital/:hospitalId',
+        name: 'PetHospitalPublic',
+        component: () => import('@/views/pets/PetHospitalPublicView.vue'),
+        meta: { title: '合作医院' },
       },
       {
         path: 'profile',
@@ -75,6 +82,12 @@ const routes = [
         name: 'AdminPets',
         component: () => import('@/views/admin/AdminPetManageView.vue'),
         meta: { title: '宠物档案', roles: [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
+      },
+      {
+        path: 'adoption',
+        name: 'AdminAdoption',
+        component: () => import('@/views/admin/AdminAdoptionView.vue'),
+        meta: { title: '领养与回访', roles: [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
       },
       {
         path: 'users',

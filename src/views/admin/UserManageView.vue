@@ -60,8 +60,17 @@
     <!-- 新增用户 -->
     <a-modal v-model:visible="addVisible" title="新增用户" @ok="submitAdd" @cancel="addVisible = false">
       <a-form :model="addForm" layout="vertical">
-        <a-form-item label="登录账号" required>
-          <a-input v-model="addForm.username" />
+        <a-form-item
+          label="登录账号"
+          required
+          :extra="`长度 ${USERNAME_MIN_LEN}～${USERNAME_MAX_LEN} 个字符，与前台登录规则一致`"
+        >
+          <a-input
+            v-model="addForm.username"
+            :max-length="USERNAME_MAX_LEN"
+            allow-clear
+            placeholder="至少 4 个字符"
+          />
         </a-form-item>
         <a-form-item label="真实姓名">
           <a-input v-model="addForm.realName" />
@@ -98,11 +107,21 @@
         <a-form-item label="用户 ID">
           <a-input :model-value="String(editForm.id)" disabled />
         </a-form-item>
-        <a-form-item label="登录账号">
-          <a-input v-model="editForm.username" />
+        <a-form-item
+          label="登录账号"
+          :extra="`长度 ${USERNAME_MIN_LEN}～${USERNAME_MAX_LEN} 个字符`"
+        >
+          <a-input v-model="editForm.username" :max-length="USERNAME_MAX_LEN" allow-clear />
         </a-form-item>
-        <a-form-item label="新密码（留空则不修改）">
-          <a-input-password v-model="editForm.password" placeholder="可选" />
+        <a-form-item
+          label="新密码（留空则不修改）"
+          :extra="`若填写，长度 ${PASSWORD_MIN_LEN}～${PASSWORD_MAX_LEN} 个字符`"
+        >
+          <a-input-password
+            v-model="editForm.password"
+            :max-length="PASSWORD_MAX_LEN"
+            placeholder="可选"
+          />
         </a-form-item>
         <a-form-item v-if="isSuper" label="角色">
           <a-select v-model="editForm.role" :options="roleOptions" />
@@ -133,6 +152,14 @@ import { Message } from '@arco-design/web-vue';
 import { useUserStore } from '@/stores/user';
 import * as userApi from '@/api/userApi';
 import { ROLE, ROLE_LABEL, USER_STATUS_LABEL } from '@/constants/roles';
+import {
+  USERNAME_MIN_LEN,
+  USERNAME_MAX_LEN,
+  PASSWORD_MIN_LEN,
+  PASSWORD_MAX_LEN,
+  validateUsernameForLogin,
+  validatePasswordForLogin,
+} from '@/constants/userValidation';
 
 const userStore = useUserStore();
 const isSuper = computed(() => userStore.user?.role === ROLE.SUPER_ADMIN);
@@ -236,8 +263,9 @@ function openAdd() {
 }
 
 async function submitAdd() {
-  if (!addForm.username?.trim()) {
-    Message.warning('请填写账号');
+  const nameErr = validateUsernameForLogin(addForm.username);
+  if (nameErr) {
+    Message.warning(nameErr);
     return;
   }
   if (
@@ -259,10 +287,14 @@ async function submitAdd() {
       payload.hospitalId = addForm.hospitalId;
     }
   }
-  await userApi.addUser(payload);
-  Message.success('已创建');
-  addVisible.value = false;
-  loadList();
+  try {
+    await userApi.addUser(payload);
+    Message.success('已创建');
+    addVisible.value = false;
+    loadList();
+  } catch (e) {
+    Message.error(e?.message || '创建失败');
+  }
 }
 
 const editVisible = ref(false);
@@ -295,9 +327,21 @@ async function openEdit(record) {
 }
 
 async function submitEdit() {
+  const nameErr = validateUsernameForLogin(editForm.username);
+  if (nameErr) {
+    Message.warning(nameErr);
+    return;
+  }
+  if (editForm.password?.trim()) {
+    const pwdErr = validatePasswordForLogin(editForm.password);
+    if (pwdErr) {
+      Message.warning(pwdErr);
+      return;
+    }
+  }
   const payload = {
     id: editForm.id,
-    username: editForm.username,
+    username: editForm.username.trim(),
     role: editForm.role,
     hospitalId: editForm.hospitalId,
     hasAbandonRecord: editForm.hasAbandonRecord,
@@ -307,10 +351,14 @@ async function submitEdit() {
   if (editForm.password?.trim()) {
     payload.password = editForm.password;
   }
-  await userApi.updateUser(payload);
-  Message.success('已更新');
-  editVisible.value = false;
-  loadList();
+  try {
+    await userApi.updateUser(payload);
+    Message.success('已更新');
+    editVisible.value = false;
+    loadList();
+  } catch (e) {
+    Message.error(e?.message || '更新失败');
+  }
 }
 
 async function removeRow(record) {
