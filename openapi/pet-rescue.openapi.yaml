@@ -1,0 +1,26 @@
+# 与后端 springdoc 路径一致时的快照说明（便于离线对照）
+# 在线文档：后端启动后访问 http://localhost:8080/api/doc.html
+# JSON：http://localhost:8080/api/v3/api-docs
+openapi: 3.0.1
+info:
+  title: pet-rescue
+  version: "0.0.1"
+servers:
+  - url: /api
+paths:
+  /user/register: { post: { summary: 用户注册 } }
+  /user/login: { post: { summary: 用户登录 } }
+  /user/logout: { post: { summary: 用户登出 } }
+  /user/get/Login: { get: { summary: 获取当前登录用户 } }
+  /user/my/updateMyUser: { post: { summary: 用户自己更新 } }
+  /user/add: { post: { summary: 管理员添加用户 } }
+  /user/delete: { post: { summary: 管理员删除用户 } }
+  /user/update: { post: { summary: 管理员更新用户 } }
+  /user/getUser: { get: { summary: 根据id获取用户 } }
+  /user/list/userPage: { post: { summary: 分页获取用户列表 } }
+  /user/getHospital: { get: { summary: 根据id获取医院 } }
+  /user/list/hospitalPage: { post: { summary: 分页获取医院列表 } }
+  /user/audit: { post: { summary: 审核宠物医院 } }
+  /user/close: { post: { summary: 关闭宠物医院 } }
+  /hospital/register: { post: { summary: 医院注册 } }
+  /hospital/update: { post: { summary: 医院更新 } }
