@@ -11,6 +11,10 @@
           <template #icon><IconHeart /></template>
           救助与建档
         </a-menu-item>
+        <a-menu-item v-if="showVisualization" key="visualization">
+          <template #icon><IconMindMapping /></template>
+          数据可视化
+        </a-menu-item>
         <a-menu-item v-if="showPets" key="pets">
           <template #icon><IconImage /></template>
           宠物档案
@@ -61,6 +65,7 @@ import {
   IconHeart,
   IconImage,
   IconFile,
+  IconMindMapping,
 } from '@arco-design/web-vue/es/icon';
 import { useUserStore } from '@/stores/user';
 import { ROLE } from '@/constants/roles';
@@ -77,6 +82,9 @@ const role = computed(() => userStore.user?.role);
 const isStaff = computed(() => role.value === ROLE.STAFF);
 
 const showRescue = computed(() =>
+  [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
+);
+const showVisualization = computed(() =>
   [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
 );
 const showPets = computed(() => [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value));
@@ -119,6 +127,7 @@ const titleShort = computed(() => {
 const activeKey = computed(() => {
   const p = route.path;
   if (p.startsWith('/admin/rescue')) return 'rescue';
+  if (p.startsWith('/admin/visualization')) return 'visualization';
   if (p.startsWith('/admin/pets')) return 'pets';
   if (p.startsWith('/admin/adoption')) return 'adoption';
   if (p.startsWith('/admin/users')) return 'users';
@@ -131,6 +140,7 @@ function onMenuClick(key) {
   const map = {
     dash: '/admin',
     rescue: '/admin/rescue',
+    visualization: '/admin/visualization',
     pets: '/admin/pets',
     adoption: '/admin/adoption',
     users: '/admin/users',

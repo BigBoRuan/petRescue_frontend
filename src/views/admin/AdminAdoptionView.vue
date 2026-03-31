@@ -52,11 +52,14 @@
             <a-tag v-if="record.adoptionFlowFinished" color="green">流程已结束</a-tag>
             <a-tag v-else class="bili-tag">回访进行中</a-tag>
           </template>
+          <template #adoptTime="{ record }">
+            {{ formatDateTime(record.adoptTime) }}
+          </template>
           <template #visits="{ record }">
             <div class="visit-list">
               <div v-for="v in record.visits || []" :key="v.id" class="visit-row">
                 <span>第 {{ v.visitCount }} 次</span>
-                <span class="muted">{{ formatDate(v.visitTime) }}</span>
+                <span class="muted">{{ formatDateTime(v.visitTime) }}</span>
                 <span :class="{ pending: v.pending }">{{ v.pending ? '待回访' : v.visitResult }}</span>
                 <a-button
                   v-if="v.pending"
@@ -100,6 +103,11 @@
 import { onMounted, reactive, ref } from 'vue';
 import { Message } from '@arco-design/web-vue';
 import * as adoptionApi from '@/api/adoptionApi';
+import { formatDateTime as formatDateTimeUtil } from '@/utils/dateFormat';
+
+function formatDateTime(value) {
+  return formatDateTimeUtil(value);
+}
 
 const tab = ref('apply');
 
@@ -133,7 +141,7 @@ const recordCols = [
   { title: '领养人', dataIndex: 'username', width: 120 },
   { title: '宠物', dataIndex: 'petName', width: 120 },
   { title: '医院', dataIndex: 'hospitalName', ellipsis: true },
-  { title: '领养时间', dataIndex: 'adoptTime', width: 170 },
+  { title: '领养时间', slotName: 'adoptTime', width: 178 },
   { title: '流程', slotName: 'flow', width: 120 },
   { title: '回访', slotName: 'visits', minWidth: 320 },
 ];
@@ -145,13 +153,6 @@ const rejectReason = ref('');
 const visitVisible = ref(false);
 const visitForm = reactive({ time: null, result: '' });
 let visitTarget = null;
-
-function formatDate(d) {
-  if (!d) return '—';
-  const x = new Date(d);
-  if (Number.isNaN(x.getTime())) return String(d);
-  return x.toLocaleString();
-}
 
 async function loadApplies(page = 1) {
   applyLoading.value = true;

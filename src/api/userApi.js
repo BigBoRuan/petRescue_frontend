@@ -24,6 +24,11 @@ export function updateMyUser(body) {
   return unwrapData(http.post('/user/my/updateMyUser', body));
 }
 
+/** 当前登录用户修改本人密码（需原密码） */
+export function changeMyPassword(body) {
+  return unwrapData(http.post('/user/my/changePassword', body));
+}
+
 export function addUser(body) {
   return unwrapData(http.post('/user/add', body));
 }

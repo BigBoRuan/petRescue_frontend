@@ -78,6 +78,12 @@ const routes = [
         meta: { title: '救助与建档', roles: [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
       },
       {
+        path: 'visualization',
+        name: 'AdminVisualization',
+        component: () => import('@/views/admin/AdminVisualizationView.vue'),
+        meta: { title: '数据可视化', roles: [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
+      },
+      {
         path: 'pets',
         name: 'AdminPets',
         component: () => import('@/views/admin/AdminPetManageView.vue'),

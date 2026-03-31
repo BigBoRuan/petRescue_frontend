@@ -66,15 +66,27 @@
       </template>
     </a-table>
 
-    <a-modal v-model:visible="detailVisible" title="医院详情" :footer="false" width="600px">
+    <a-modal v-model:visible="detailVisible" title="医院详情" :footer="false" width="720px">
       <a-descriptions v-if="detail" :column="1" bordered size="small">
         <a-descriptions-item label="ID">{{ detail.id }}</a-descriptions-item>
         <a-descriptions-item label="名称">{{ detail.hospitalName }}</a-descriptions-item>
         <a-descriptions-item label="地址">{{ detail.address }}</a-descriptions-item>
         <a-descriptions-item label="电话">{{ detail.phone }}</a-descriptions-item>
-        <a-descriptions-item label="执照号">{{ detail.licenseNo }}</a-descriptions-item>
+        <a-descriptions-item label="营业执照编号">{{ detail.licenseNo }}</a-descriptions-item>
         <a-descriptions-item label="状态">{{ HOSPITAL_STATUS_LABEL[detail.status] }}</a-descriptions-item>
         <a-descriptions-item label="简介">{{ detail.description }}</a-descriptions-item>
+        <a-descriptions-item label="医院展示图">
+          <div v-if="detailShowcaseUrls.length" class="detail-showcase-grid">
+            <a-image
+              v-for="(url, i) in detailShowcaseUrls"
+              :key="i"
+              class="detail-showcase-img"
+              :src="publicFileUrl(url)"
+              width="120"
+            />
+          </div>
+          <span v-else class="detail-showcase-empty">暂无（可在「医院资料」中上传）</span>
+        </a-descriptions-item>
       </a-descriptions>
     </a-modal>
 
@@ -94,6 +106,7 @@ import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import * as userApi from '@/api/userApi';
 import { HOSPITAL_STATUS, HOSPITAL_STATUS_LABEL } from '@/constants/roles';
+import { publicFileUrl } from '@/utils/publicAssetUrl';
 
 const router = useRouter();
 
@@ -173,6 +186,12 @@ function onPageSizeChange(s) {
 const detailVisible = ref(false);
 const detail = ref(null);
 
+const detailShowcaseUrls = computed(() => {
+  const u = detail.value?.showcaseImageUrls;
+  if (!Array.isArray(u)) return [];
+  return u.map((x) => String(x).trim()).filter(Boolean);
+});
+
 function onTableRowClick(record) {
   openDetail(record);
 }
@@ -221,5 +240,24 @@ loadList();
 }
 :deep(tr.hospital-manage-row) {
   cursor: pointer;
+}
+.detail-showcase-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+}
+.detail-showcase-img {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-neutral-3);
+}
+.detail-showcase-img :deep(.arco-image-img) {
+  height: 120px;
+  object-fit: cover;
+}
+.detail-showcase-empty {
+  color: var(--color-text-3);
+  font-size: 13px;
 }
 </style>

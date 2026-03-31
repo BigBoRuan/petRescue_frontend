@@ -58,6 +58,7 @@ import { reactive, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
+import { BusinessError } from '@/api/businessError';
 import * as userApi from '@/api/userApi';
 import { useUserStore } from '@/stores/user';
 import { useUiStore } from '@/stores/ui';
@@ -106,6 +107,8 @@ async function submitLogin({ values, errors }) {
     if (redir && typeof redir === 'string' && redir.startsWith('/')) {
       router.replace(redir);
     }
+  } catch (e) {
+    if (!(e instanceof BusinessError)) throw e;
   } finally {
     loginLoading.value = false;
   }
@@ -128,6 +131,8 @@ async function submitRegister({ values, errors }) {
     authModalTab.value = 'login';
     loginForm.username = values.username;
     loginForm.password = '';
+  } catch (e) {
+    if (!(e instanceof BusinessError)) throw e;
   } finally {
     regLoading.value = false;
   }

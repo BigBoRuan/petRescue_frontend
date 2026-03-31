@@ -49,3 +49,12 @@ export function rescueReportDetail(id) {
 export function rescueComplete(body) {
   return unwrapData(http.post('/pet/rescue/complete', body));
 }
+
+/** 救助与领养可视化（员工/医院管理员/超级管理员）；使用 POST 与后端一致，避免部分环境下 GET 被当作静态资源 */
+export function petStatsVisualization(params) {
+  const body = {};
+  if (params && params.hospitalId != null && params.hospitalId !== '') {
+    body.hospitalId = params.hospitalId;
+  }
+  return unwrapData(http.post('/pet/stats/visualization', body));
+}

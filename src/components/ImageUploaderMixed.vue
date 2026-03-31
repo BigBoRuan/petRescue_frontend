@@ -68,6 +68,14 @@ function reset() {
   urlText.value = '';
 }
 
+/** 从已有 URL 列表恢复展示（如编辑页回显） */
+function loadPaths(urls) {
+  uploadedPaths.value = Array.isArray(urls)
+    ? urls.map((s) => String(s).trim()).filter(Boolean)
+    : [];
+  urlText.value = '';
+}
+
 async function handleUpload(option) {
   const file = option?.file ?? option?.fileItem?.file;
   if (!file) {
@@ -88,7 +96,7 @@ function removeUploaded(url) {
   uploadedPaths.value = uploadedPaths.value.filter((x) => x !== url);
 }
 
-defineExpose({ getMerged, reset });
+defineExpose({ getMerged, reset, loadPaths });
 </script>
 
 <style scoped>

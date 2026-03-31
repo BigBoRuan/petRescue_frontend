@@ -2,7 +2,7 @@
   <div>
     <a-typography-title :heading="4" style="margin-top: 0">用户管理</a-typography-title>
     <a-typography-paragraph type="secondary">
-      超级管理员可管理全站用户；医院管理员仅可管理本院员工。
+      超级管理员可管理全站用户并重置任意账号密码；医院管理员可管理本院员工并为其重置密码。本人密码请在「个人资料」修改。
     </a-typography-paragraph>
 
     <a-card class="toolbar-card">
@@ -113,10 +113,7 @@
         >
           <a-input v-model="editForm.username" :max-length="USERNAME_MAX_LEN" allow-clear />
         </a-form-item>
-        <a-form-item
-          label="新密码（留空则不修改）"
-          :extra="`若填写，长度 ${PASSWORD_MIN_LEN}～${PASSWORD_MAX_LEN} 个字符`"
-        >
+        <a-form-item label="新密码（留空则不修改）" :extra="passwordResetExtra">
           <a-input-password
             v-model="editForm.password"
             :max-length="PASSWORD_MAX_LEN"
@@ -163,6 +160,14 @@ import {
 
 const userStore = useUserStore();
 const isSuper = computed(() => userStore.user?.role === ROLE.SUPER_ADMIN);
+
+const passwordResetExtra = computed(() => {
+  const base = `若填写，长度 ${PASSWORD_MIN_LEN}～${PASSWORD_MAX_LEN} 个字符。`;
+  if (isSuper.value) {
+    return `${base}超级管理员可为任意用户重置登录密码。`;
+  }
+  return `${base}医院管理员可为本院员工重置密码。`;
+});
 
 const roleOptions = [
   { label: '普通用户', value: ROLE.USER },

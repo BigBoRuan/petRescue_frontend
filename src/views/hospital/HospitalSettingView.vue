@@ -25,6 +25,12 @@
         <a-form-item field="description" label="简介" :rules="[{ required: true, message: '必填' }]">
           <a-textarea v-model="form.description" :auto-size="{ minRows: 4, maxRows: 12 }" />
         </a-form-item>
+        <a-form-item label="医院展示图">
+          <ImageUploaderMixed
+            ref="showcaseUploaderRef"
+            hint="用户从领养中心「合作医院榜」进入本院页时将看到此处图片；支持上传或粘贴链接，最多 12 张。"
+          />
+        </a-form-item>
         <a-button type="primary" html-type="submit" :loading="saving">保存</a-button>
       </a-form>
     </a-card>
@@ -40,8 +46,10 @@ import { ROLE } from '@/constants/roles';
 import * as userApi from '@/api/userApi';
 import { hospitalUpdate } from '@/api/hospitalApi';
 import HospitalRegionAddress from '@/components/HospitalRegionAddress.vue';
+import ImageUploaderMixed from '@/components/ImageUploaderMixed.vue';
 
 const route = useRoute();
+const showcaseUploaderRef = ref(null);
 
 const addressRules = [
   { required: true, message: '请选择所在地区' },
@@ -85,6 +93,7 @@ const form = reactive({
 async function loadHospital() {
   if (!hospitalId.value) return;
   pageLoading.value = true;
+  let showcaseUrls = [];
   try {
     const h = await userApi.getHospitalById(hospitalId.value);
     form.hospitalName = h.hospitalName || '';
@@ -92,8 +101,24 @@ async function loadHospital() {
     form.phone = h.phone || '';
     form.licenseNo = h.licenseNo || '';
     form.description = h.description || '';
+    const raw = h.showcaseImageUrls;
+    showcaseUrls = Array.isArray(raw)
+      ? raw.map((x) => String(x).trim()).filter(Boolean)
+      : [];
   } finally {
     pageLoading.value = false;
+  }
+  /**
+   * a-card :loading=true 时默认不渲染 body，ImageUploaderMixed 尚未挂载，
+   * 须在关闭 loading 并等待一轮任务后再 loadPaths，否则已上传图无法回显。
+   * （用 macrotask 而非 nextTick，避免部分环境下 import 与 ESLint 不一致。）
+   */
+  const afterPaint = () => new Promise((r) => setTimeout(r, 0));
+  await afterPaint();
+  showcaseUploaderRef.value?.loadPaths(showcaseUrls);
+  if (showcaseUrls.length && !showcaseUploaderRef.value) {
+    await afterPaint();
+    showcaseUploaderRef.value?.loadPaths(showcaseUrls);
   }
 }
 
@@ -109,6 +134,7 @@ async function submit({ errors }) {
   if ((errors && Object.keys(errors).length) || !hospitalId.value) return;
   saving.value = true;
   try {
+    const showcaseImageUrls = showcaseUploaderRef.value?.getMerged?.() ?? [];
     await hospitalUpdate({
       id: hospitalId.value,
       hospitalName: form.hospitalName,
@@ -116,6 +142,7 @@ async function submit({ errors }) {
       phone: form.phone,
       licenseNo: form.licenseNo,
       description: form.description,
+      showcaseImageUrls,
     });
     Message.success('已保存');
   } finally {

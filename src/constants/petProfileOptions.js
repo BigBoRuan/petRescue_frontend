@@ -12,14 +12,17 @@ export const PET_AGE_OPTIONS = Array.from({ length: 31 }, (_, i) => ({
   label: `${i} 岁`,
 }));
 
+/**
+ * 救助完成并建档时：仅保留表示适合进入领养展示的健康描述。
+ * 若仍在治疗/观察中，不应完成建档；编辑旧档案时 mergeLegacyStringOption 会保留库内原值选项。
+ */
 export const PET_HEALTH_STATUS_OPTIONS = [
   { value: '健康', label: '健康' },
   { value: '良好', label: '良好' },
-  { value: '需治疗', label: '需治疗' },
-  { value: '术后恢复中', label: '术后恢复中' },
-  { value: '观察中', label: '观察中' },
-  { value: '体弱', label: '体弱' },
-  { value: '慢性病管理', label: '慢性病管理' },
+  { value: '状态稳定', label: '状态稳定' },
+  { value: '精神食欲良好', label: '精神食欲良好' },
+  { value: '无已知疾病', label: '无已知疾病' },
+  { value: '已康复', label: '已康复' },
 ];
 
 /**

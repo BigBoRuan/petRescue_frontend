@@ -5,6 +5,12 @@
       根据你的角色，可使用左侧菜单进入对应功能。
     </a-typography-paragraph>
     <a-row :gutter="16" style="margin-top: 8px">
+      <a-col v-if="showVisualization" :xs="24" :sm="12" :md="8">
+        <a-card class="dash-card" hoverable @click="$router.push('/admin/visualization')">
+          <h3>数据可视化</h3>
+          <p>饼图、趋势与结构树，查看本院或全平台救助与领养概况</p>
+        </a-card>
+      </a-col>
       <a-col v-if="showRescue" :xs="24" :sm="12" :md="8">
         <a-card class="dash-card" hoverable @click="$router.push('/admin/rescue')">
           <h3>救助与建档</h3>
@@ -48,6 +54,9 @@ const userStore = useUserStore();
 const role = computed(() => userStore.user?.role);
 
 const showRescue = computed(() =>
+  [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
+);
+const showVisualization = computed(() =>
   [ROLE.STAFF, ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
 );
 const showPets = computed(() => [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value));

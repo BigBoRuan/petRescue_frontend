@@ -108,6 +108,12 @@
                 :to="{ name: 'PetHospitalPublic', params: { hospitalId: String(h.hospitalId) } }"
               >
                 <span class="rank-num" :class="{ 'rank-num--top': i < 3 }">{{ i + 1 }}</span>
+                <img
+                  v-if="h.coverImageUrl"
+                  class="rank-cover"
+                  :src="publicFileUrl(h.coverImageUrl)"
+                  alt=""
+                />
                 <span class="rank-name">{{ h.hospitalName || '医院' }}</span>
                 <span class="rank-count">{{ h.adoptablePetCount }} 只</span>
               </router-link>
@@ -126,6 +132,7 @@ import * as petApi from '@/api/petApi';
 import { ADOPT_HERO_SLIDES } from '@/image/adoptHeroSlides.js';
 import HospitalRegionAddress from '@/components/HospitalRegionAddress.vue';
 import PetAdoptCard from '@/components/pets/PetAdoptCard.vue';
+import { publicFileUrl } from '@/utils/publicAssetUrl';
 
 const heroSlides = ADOPT_HERO_SLIDES;
 
@@ -537,6 +544,14 @@ onMounted(() => {
 .rank-num--top {
   background: linear-gradient(135deg, #fb7299, #ff9eb5);
   color: #fff;
+}
+.rank-cover {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--bili-line);
 }
 .rank-name {
   flex: 1;
