@@ -94,9 +94,17 @@ const treeRef = ref(null);
 const chartInstances = [];
 
 function pieOption(title, items) {
-  const data = (items || []).map((i) => ({ name: i.name, value: Number(i.value) || 0 }));
+  const raw = (items || []).map((i) => ({ name: i.name, value: Number(i.value) || 0 }));
+  // ECharts 饼图在大量 0 值时观感怪异（仍占 legend/tooltip），这里过滤 0 值。
+  const data = raw.filter((d) => d.value > 0);
   return {
-    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    tooltip: {
+      trigger: 'item',
+      formatter: (p) => {
+        if (!p || p.name === '暂无数据') return '暂无数据';
+        return `${p.name}: ${p.value} (${p.percent}%)`;
+      },
+    },
     legend: { bottom: 0, type: 'scroll' },
     series: [
       {
@@ -105,8 +113,8 @@ function pieOption(title, items) {
         radius: ['36%', '62%'],
         avoidLabelOverlap: true,
         itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
-        label: { show: true },
-        data,
+        label: { show: true, formatter: (p) => (p.name === '暂无数据' ? '暂无数据' : p.name) },
+        data: data.length ? data : [{ name: '暂无数据', value: 1 }],
       },
     ],
   };

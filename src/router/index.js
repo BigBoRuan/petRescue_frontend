@@ -113,6 +113,18 @@ const routes = [
         component: () => import('@/views/hospital/HospitalSettingView.vue'),
         meta: { title: '医院资料维护', roles: [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
       },
+      {
+        path: 'hospital-notice',
+        name: 'AdminHospitalNotice',
+        component: () => import('@/views/hospital/HospitalNoticeView.vue'),
+        meta: { title: '医院公告', roles: [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN] },
+      },
+      {
+        path: 'notice-publish',
+        name: 'AdminNoticePublish',
+        component: () => import('@/views/admin/PlatformNoticePublishView.vue'),
+        meta: { title: '公告发布', roles: [ROLE.SUPER_ADMIN] },
+      },
     ],
   },
   { path: '/:pathMatch(.*)*', redirect: '/pets' },

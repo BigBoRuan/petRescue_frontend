@@ -32,7 +32,15 @@
         {{ record.petStatus === 1 ? '受伤' : record.petStatus === 2 ? '流浪' : record.petStatus }}
       </template>
       <template #status="{ record }">
-        {{ record.status === 0 ? '待处理' : '已救助' }}
+        {{
+          Number(record.status) === 0
+            ? '待处理'
+            : Number(record.status) === 1
+              ? '已救助'
+              : Number(record.status) === 2
+                ? '已取消'
+                : record.status
+        }}
       </template>
       <template #thumb="{ record }">
         <div class="cell-thumb">
@@ -50,20 +58,55 @@
       </template>
       <template #actions="{ record }">
         <div @click.stop>
-          <a-space>
+          <a-space wrap>
             <a-button type="outline" size="small" @click="openDetail(record)">查看详情</a-button>
             <a-button
-              v-if="record.status === 0"
+              v-if="Number(record.status) === 0"
               type="primary"
+              class="bili-primary"
               size="small"
               @click="openComplete(record)"
             >
               完成救助并建档
             </a-button>
+            <a-button
+              v-if="Number(record.status) === 0"
+              status="danger"
+              type="outline"
+              class="bili-outline-danger"
+              size="small"
+              @click="openCancel(record)"
+            >
+              取消救助/无需建档
+            </a-button>
           </a-space>
         </div>
       </template>
     </a-table>
+
+    <a-modal
+      v-model:visible="cancelVisible"
+      title="取消救助上报"
+      width="520px"
+      :ok-loading="cancelLoading"
+      @ok="submitCancel"
+      @cancel="cancelVisible = false"
+    >
+      <a-alert type="warning" style="margin-bottom: 12px">
+        适用于：宠物已死亡 / 已被他人救助 / 误报等情况。取消后将不再建档。
+      </a-alert>
+      <a-form :model="cancelForm" layout="vertical">
+        <a-form-item label="取消原因（选填）">
+          <a-textarea
+            v-model="cancelForm.reason"
+            :max-length="2000"
+            show-word-limit
+            placeholder="例如：已死亡 / 已被他人救助 / 误报…"
+            :auto-size="{ minRows: 3, maxRows: 8 }"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <a-modal v-model:visible="addVisible" title="新增救助上报" width="600px" @ok="submitAdd">
       <a-form :model="addForm" layout="vertical">
@@ -183,7 +226,18 @@
               {{ detail.report.petStatus === 1 ? '受伤' : detail.report.petStatus === 2 ? '流浪' : detail.report.petStatus }}
             </a-descriptions-item>
             <a-descriptions-item label="处理状态">
-              {{ detail.report.status === 0 ? '待处理' : '已救助' }}
+              {{
+                Number(detail.report.status) === 0
+                  ? '待处理'
+                  : Number(detail.report.status) === 1
+                    ? '已救助'
+                    : Number(detail.report.status) === 2
+                      ? '已取消'
+                      : detail.report.status
+              }}
+            </a-descriptions-item>
+            <a-descriptions-item v-if="Number(detail.report.status) === 2" label="取消原因">
+              {{ detail.report.cancelReason || '—' }}
             </a-descriptions-item>
             <a-descriptions-item label="情况描述">{{ detail.report.description || '—' }}</a-descriptions-item>
           </a-descriptions>
@@ -310,7 +364,7 @@ const columns = [
   { title: '地点', dataIndex: 'discoverLocation', ellipsis: true, tooltip: true, minWidth: 160 },
   { title: '宠物状态', slotName: 'petStatus', width: 88 },
   { title: '处理状态', slotName: 'status', width: 96 },
-  { title: '操作', slotName: 'actions', width: 240, fixed: 'right' },
+  { title: '操作', slotName: 'actions', width: 340, fixed: 'right' },
 ];
 
 const detailVisible = ref(false);
@@ -381,6 +435,11 @@ const addForm = reactive({
 
 const addImagesUploader = ref(null);
 const completeImagesUploader = ref(null);
+
+const cancelVisible = ref(false);
+const cancelLoading = ref(false);
+let cancelTarget = null;
+const cancelForm = reactive({ reason: '' });
 
 async function openAdd() {
   addForm.discoverTime = new Date();
@@ -479,6 +538,12 @@ async function openComplete(record) {
   completeImagesUploader.value?.reset();
 }
 
+function openCancel(record) {
+  cancelTarget = record;
+  cancelForm.reason = '';
+  cancelVisible.value = true;
+}
+
 async function submitComplete() {
   if (
     !completeForm.rescueTime ||
@@ -528,10 +593,48 @@ async function submitComplete() {
   }
 }
 
+async function submitCancel() {
+  if (!cancelTarget?.id) return;
+  cancelLoading.value = true;
+  try {
+    await petApi.rescueReportCancel({
+      reportId: cancelTarget.id,
+      cancelReason: (cancelForm.reason || '').trim() || undefined,
+    });
+    cancelVisible.value = false;
+    Message.success('已取消该上报');
+    reload();
+  } catch (e) {
+    Message.error(e?.message || '取消失败');
+  } finally {
+    cancelLoading.value = false;
+  }
+}
+
 reload();
 </script>
 
 <style scoped>
+.bili-primary {
+  background: var(--bili-pink, #fb7299) !important;
+  border-color: var(--bili-pink, #fb7299) !important;
+  color: #fff !important;
+}
+.bili-primary:hover {
+  background: #ff8fb3 !important;
+  border-color: #ff8fb3 !important;
+  color: #fff !important;
+}
+.bili-outline-danger {
+  border-color: rgba(251, 114, 153, 0.55) !important;
+  color: var(--bili-pink, #fb7299) !important;
+  background: #fff !important;
+}
+.bili-outline-danger:hover {
+  border-color: var(--bili-pink, #fb7299) !important;
+  color: var(--bili-pink, #fb7299) !important;
+  background: rgba(251, 114, 153, 0.08) !important;
+}
 .muted {
   color: var(--bili-muted, #999);
 }

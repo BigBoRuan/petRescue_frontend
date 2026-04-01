@@ -18,6 +18,32 @@ export function adoptHospitalPublic(id) {
   return unwrapData(http.get('/pet/adopt/hospital/public', { params: { id: String(id) } }));
 }
 
+/** 用户端：搜索合作医院（已通过审核，无需登录） */
+export function adoptHospitalSearch(params = {}) {
+  const keyword = (params.keyword || '').trim();
+  const current = params.current ?? 1;
+  const pageSize = params.pageSize ?? 10;
+  return unwrapData(
+    http.get('/pet/adopt/hospital/search', {
+      params: {
+        keyword: keyword || undefined,
+        current,
+        pageSize,
+      },
+    })
+  );
+}
+
+/** 用户端：领养中心医院公告列表（仅已通过审核且公告非空，无需登录） */
+export function adoptHospitalNoticeList(limit = 5) {
+  return unwrapData(http.get('/pet/adopt/hospital/notice/list', { params: { limit } }));
+}
+
+/** 用户端：平台公告列表（超级管理员发布，无需登录） */
+export function adoptPlatformNoticeList(limit = 5) {
+  return unwrapData(http.get('/pet/adopt/notice/list', { params: { limit } }));
+}
+
 export function petInfoPage(body) {
   return unwrapData(http.post('/pet/info/page', body));
 }
@@ -48,6 +74,10 @@ export function rescueReportDetail(id) {
 
 export function rescueComplete(body) {
   return unwrapData(http.post('/pet/rescue/complete', body));
+}
+
+export function rescueReportCancel(body) {
+  return unwrapData(http.post('/pet/rescue/report/cancel', body));
 }
 
 /** 救助与领养可视化（员工/医院管理员/超级管理员）；使用 POST 与后端一致，避免部分环境下 GET 被当作静态资源 */

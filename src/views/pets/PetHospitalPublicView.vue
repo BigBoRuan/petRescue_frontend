@@ -14,6 +14,17 @@
               <p v-if="hospital.address"><span class="label">地址</span>{{ hospital.address }}</p>
               <p v-if="hospital.phone"><span class="label">电话</span>{{ hospital.phone }}</p>
             </div>
+            <div
+              v-if="noticeContent"
+              class="hospital-notice-inline"
+              role="button"
+              tabindex="0"
+              @click="noticeModalVisible = true"
+              @keyup.enter="noticeModalVisible = true"
+            >
+              <h3 class="notice-title">医院公告</h3>
+              <p class="notice-content">{{ noticeContent }}</p>
+            </div>
             <p v-if="hospital.description" class="hospital-desc">{{ hospital.description }}</p>
           </div>
           <!-- 仅 1 张：静态展示；2 张及以上：轮播 -->
@@ -82,6 +93,21 @@
         回领养中心
       </a-button>
     </div>
+
+    <a-modal
+      v-model:visible="noticeModalVisible"
+      title="医院公告"
+      :footer="false"
+      width="520px"
+      class="hospital-notice-modal"
+    >
+      <div class="notice-modal-body">
+        <p class="notice-modal-text">{{ noticeContent }}</p>
+      </div>
+      <div class="modal-footer-actions">
+        <a-button type="primary" class="bili-primary" @click="noticeModalVisible = false">知道了</a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -115,6 +141,13 @@ function extractShowcaseUrls(raw) {
 }
 
 const showcaseUrls = computed(() => extractShowcaseUrls(hospital.value));
+const noticeContent = computed(() => {
+  const raw = hospital.value?.noticeContent ?? hospital.value?.notice_content;
+  if (raw == null) return '';
+  const s = String(raw).trim();
+  return s;
+});
+const noticeModalVisible = ref(false);
 const loadingHospital = ref(true);
 const loadingPets = ref(true);
 const items = ref([]);
@@ -140,6 +173,7 @@ async function loadHospital() {
     hospital.value = data
       ? { ...data, showcaseImageUrls: extractShowcaseUrls(data) }
       : null;
+    noticeModalVisible.value = !!(hospital.value && noticeContent.value);
   } catch {
     hospital.value = null;
   } finally {
@@ -321,6 +355,113 @@ watch(
   font-size: 14px;
   line-height: 1.65;
   color: #4a5568;
+}
+.hospital-notice-inline {
+  margin-top: 12px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--bili-line);
+  background: linear-gradient(180deg, rgba(251, 114, 153, 0.08), rgba(251, 114, 153, 0.03));
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  outline: none;
+}
+.hospital-notice-inline:hover {
+  border-color: rgba(251, 114, 153, 0.35);
+  box-shadow: 0 10px 24px rgba(251, 114, 153, 0.12);
+  transform: translateY(-1px);
+}
+.hospital-notice-inline:focus-visible {
+  box-shadow: 0 0 0 2px rgba(251, 114, 153, 0.35), 0 10px 24px rgba(251, 114, 153, 0.12);
+}
+.notice-title {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--bili-text);
+}
+.notice-content {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #4a5568;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.notice-modal-body {
+  padding: 10px 6px 12px;
+}
+.notice-modal-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #4a5568;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.hospital-notice-modal :deep(.arco-modal) {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--bili-line);
+  box-shadow: 0 18px 60px rgba(16, 24, 40, 0.18);
+}
+.hospital-notice-modal :deep(.arco-modal-header) {
+  position: relative;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--bili-line);
+  background: linear-gradient(180deg, rgba(251, 114, 153, 0.12), rgba(251, 114, 153, 0.04));
+  overflow: hidden;
+}
+.hospital-notice-modal :deep(.arco-modal-header)::before {
+  content: '';
+  position: absolute;
+  inset: -10px -10px -10px -10px;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27160%27%20height%3D%2760%27%20viewBox%3D%270%200%20160%2060%27%3E%3Cg%20fill%3D%27%23fb7299%27%20fill-opacity%3D%270.22%27%3E%3Cpath%20d%3D%27M20%2038c6%200%2010%204%2010%209s-5%209-10%209-10-4-10-9%205-9%2010-9z%27/%3E%3Ccircle%20cx%3D%2711%27%20cy%3D%2728%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%2719%27%20cy%3D%2725%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%2729%27%20cy%3D%2728%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%2723%27%20cy%3D%2721%27%20r%3D%273%27/%3E%3Cpath%20d%3D%27M92%2036c6%200%2010%204%2010%209s-5%209-10%209-10-4-10-9%205-9%2010-9z%27/%3E%3Ccircle%20cx%3D%2783%27%20cy%3D%2726%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%2791%27%20cy%3D%2723%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%27101%27%20cy%3D%2726%27%20r%3D%273%27/%3E%3Ccircle%20cx%3D%2795%27%20cy%3D%2719%27%20r%3D%273%27/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 70px;
+  transform: rotate(-2deg);
+  pointer-events: none;
+  opacity: 0.55;
+}
+.hospital-notice-modal :deep(.arco-modal-title) {
+  position: relative;
+  font-weight: 900;
+  color: var(--bili-text);
+  letter-spacing: 0.2px;
+}
+.hospital-notice-modal :deep(.arco-modal-close-btn) {
+  color: var(--bili-muted);
+}
+.hospital-notice-modal :deep(.arco-modal-body) {
+  padding: 16px 18px 14px;
+  background: #fff;
+}
+.hospital-notice-modal .modal-footer-actions {
+  padding: 12px 18px 16px;
+  margin-top: 0;
+  border-top: 1px solid var(--bili-line);
+  background: #fff;
+}
+.hospital-notice-modal :deep(.arco-modal-mask) {
+  backdrop-filter: blur(2px);
+}
+
+.hospital-notice-modal .bili-primary {
+  background: var(--bili-pink, #fb7299) !important;
+  border-color: var(--bili-pink, #fb7299) !important;
+  color: #fff !important;
+}
+.hospital-notice-modal .bili-primary:hover {
+  background: #ff8fb3 !important;
+  border-color: #ff8fb3 !important;
+  color: #fff !important;
+}
+.modal-footer-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid var(--bili-line);
 }
 .section-title {
   margin: 0 0 4px;
