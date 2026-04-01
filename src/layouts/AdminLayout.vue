@@ -35,6 +35,14 @@
           <template #icon><IconEdit /></template>
           医院资料
         </a-menu-item>
+        <a-menu-item v-if="showHospitalNotice" key="hospital-notice">
+          <template #icon><IconNotification /></template>
+          医院公告
+        </a-menu-item>
+        <a-menu-item v-if="showPlatformNotice" key="notice-publish">
+          <template #icon><IconNotification /></template>
+          公告发布
+        </a-menu-item>
       </a-menu>
     </a-layout-sider>
     <a-layout>
@@ -66,6 +74,7 @@ import {
   IconImage,
   IconFile,
   IconMindMapping,
+  IconNotification,
 } from '@arco-design/web-vue/es/icon';
 import { useUserStore } from '@/stores/user';
 import { ROLE } from '@/constants/roles';
@@ -94,6 +103,8 @@ const showHospitals = computed(() => role.value === ROLE.SUPER_ADMIN);
 const showHospitalSetting = computed(() =>
   [ROLE.HOSPITAL_ADMIN, ROLE.SUPER_ADMIN].includes(role.value)
 );
+const showHospitalNotice = computed(() => role.value === ROLE.HOSPITAL_ADMIN);
+const showPlatformNotice = computed(() => role.value === ROLE.SUPER_ADMIN);
 
 const headerTitle = computed(() => {
   if (role.value === ROLE.SUPER_ADMIN) {
@@ -133,6 +144,8 @@ const activeKey = computed(() => {
   if (p.startsWith('/admin/users')) return 'users';
   if (p.startsWith('/admin/hospitals')) return 'hospitals';
   if (p.startsWith('/admin/hospital-setting')) return 'hospital-setting';
+  if (p.startsWith('/admin/hospital-notice')) return 'hospital-notice';
+  if (p.startsWith('/admin/notice-publish')) return 'notice-publish';
   return 'dash';
 });
 
@@ -146,6 +159,8 @@ function onMenuClick(key) {
     users: '/admin/users',
     hospitals: '/admin/hospitals',
     'hospital-setting': '/admin/hospital-setting',
+    'hospital-notice': '/admin/hospital-notice',
+    'notice-publish': '/admin/notice-publish',
   };
   router.push(map[key] || '/admin');
 }

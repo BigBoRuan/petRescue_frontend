@@ -18,6 +18,32 @@ export function adoptHospitalPublic(id) {
   return unwrapData(http.get('/pet/adopt/hospital/public', { params: { id: String(id) } }));
 }
 
+/** 用户端：搜索合作医院（已通过审核，无需登录） */
+export function adoptHospitalSearch(params = {}) {
+  const keyword = (params.keyword || '').trim();
+  const current = params.current ?? 1;
+  const pageSize = params.pageSize ?? 10;
+  return unwrapData(
+    http.get('/pet/adopt/hospital/search', {
+      params: {
+        keyword: keyword || undefined,
+        current,
+        pageSize,
+      },
+    })
+  );
+}
+
+/** 用户端：领养中心医院公告列表（仅已通过审核且公告非空，无需登录） */
+export function adoptHospitalNoticeList(limit = 5) {
+  return unwrapData(http.get('/pet/adopt/hospital/notice/list', { params: { limit } }));
+}
+
+/** 用户端：平台公告列表（超级管理员发布，无需登录） */
+export function adoptPlatformNoticeList(limit = 5) {
+  return unwrapData(http.get('/pet/adopt/notice/list', { params: { limit } }));
+}
+
 export function petInfoPage(body) {
   return unwrapData(http.post('/pet/info/page', body));
 }
