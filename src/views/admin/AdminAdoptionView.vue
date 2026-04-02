@@ -20,6 +20,7 @@
             <a-tag v-if="record.applyStatus === 'PENDING'" color="orange">待审核</a-tag>
             <a-tag v-else-if="record.applyStatus === 'APPROVED'" color="green">已通过</a-tag>
             <a-tag v-else-if="record.applyStatus === 'REJECTED'" color="red">已拒绝</a-tag>
+            <a-tag v-else-if="record.applyStatus === 'CANCELLED'" color="gray">已撤销</a-tag>
             <a-tag v-else>{{ record.applyStatus }}</a-tag>
           </template>
           <template #actions="{ record }">
@@ -74,6 +75,74 @@
           </template>
         </a-table>
       </a-tab-pane>
+      <a-tab-pane key="visit" title="回访记录查询">
+        <a-card class="visit-toolbar" :bordered="false">
+          <a-form :model="visitQuery" layout="inline" @submit="onVisitSearch">
+            <a-form-item field="keyword" label="关键字">
+              <a-input
+                v-model="visitQuery.keyword"
+                allow-clear
+                placeholder="用户/宠物/医院"
+                style="width: 220px"
+              />
+            </a-form-item>
+            <a-form-item field="visitCount" label="次数">
+              <a-select
+                v-model="visitQuery.visitCount"
+                allow-clear
+                placeholder="全部"
+                style="width: 120px"
+                :options="visitCountOptions"
+              />
+            </a-form-item>
+            <a-form-item field="pending" label="状态">
+              <a-select
+                v-model="visitQuery.pending"
+                allow-clear
+                placeholder="全部"
+                style="width: 140px"
+                :options="visitStatusOptions"
+              />
+            </a-form-item>
+            <a-form-item field="range" label="回访时间">
+              <a-range-picker v-model="visitQuery.range" show-time style="width: 320px" />
+            </a-form-item>
+            <a-form-item>
+              <a-button type="primary" class="bili-primary" html-type="submit">查询</a-button>
+              <a-button style="margin-left: 8px" @click="resetVisitQuery">重置</a-button>
+            </a-form-item>
+          </a-form>
+        </a-card>
+
+        <a-table
+          :columns="visitCols"
+          :data="visitRows"
+          :loading="visitLoading"
+          :pagination="visitPagination"
+          row-key="visitId"
+          style="margin-top: 12px"
+          @page-change="onVisitPage"
+          @page-size-change="onVisitPageSize"
+        >
+          <template #visitIdCell="{ record }">
+            <a-tooltip :content="String(record.visitId ?? '')">
+              <span class="table-id-cell">{{ record.visitId }}</span>
+            </a-tooltip>
+          </template>
+          <template #recordIdCell2="{ record }">
+            <a-tooltip :content="String(record.adoptionRecordId ?? '')">
+              <span class="table-id-cell">{{ record.adoptionRecordId }}</span>
+            </a-tooltip>
+          </template>
+          <template #visitStatus="{ record }">
+            <a-tag v-if="record.pending" color="orange">待回访</a-tag>
+            <a-tag v-else color="green">已完成</a-tag>
+          </template>
+          <template #visitTime="{ record }">
+            {{ formatDateTime(record.visitTime) }}
+          </template>
+        </a-table>
+      </a-tab-pane>
     </a-tabs>
 
     <a-modal v-model:visible="rejectVisible" title="拒绝原因" @ok="confirmReject">
@@ -119,6 +188,25 @@ const recordLoading = ref(false);
 const recordRows = ref([]);
 const recordPagination = reactive({ current: 1, pageSize: 10, total: 0 });
 
+const visitLoading = ref(false);
+const visitRows = ref([]);
+const visitPagination = reactive({ current: 1, pageSize: 10, total: 0 });
+const visitQuery = reactive({
+  keyword: '',
+  visitCount: undefined,
+  pending: undefined,
+  range: [],
+});
+const visitCountOptions = [
+  { label: '第1次', value: 1 },
+  { label: '第2次', value: 2 },
+  { label: '第3次', value: 3 },
+];
+const visitStatusOptions = [
+  { label: '待回访', value: true },
+  { label: '已完成', value: false },
+];
+
 const applyCols = [
   { title: '申请ID', slotName: 'applyId', width: 148, minWidth: 148 },
   { title: '用户', dataIndex: 'username', width: 120 },
@@ -144,6 +232,18 @@ const recordCols = [
   { title: '领养时间', slotName: 'adoptTime', width: 178 },
   { title: '流程', slotName: 'flow', width: 120 },
   { title: '回访', slotName: 'visits', minWidth: 320 },
+];
+
+const visitCols = [
+  { title: '回访ID', slotName: 'visitIdCell', width: 148, minWidth: 148 },
+  { title: '记录ID', slotName: 'recordIdCell2', width: 148, minWidth: 148 },
+  { title: '医院', dataIndex: 'hospitalName', ellipsis: true, tooltip: true },
+  { title: '用户', dataIndex: 'username', width: 120 },
+  { title: '宠物', dataIndex: 'petName', width: 120 },
+  { title: '次数', dataIndex: 'visitCount', width: 80 },
+  { title: '状态', slotName: 'visitStatus', width: 100 },
+  { title: '回访时间', slotName: 'visitTime', width: 178 },
+  { title: '回访结果', dataIndex: 'visitResult', ellipsis: true, tooltip: true, minWidth: 220 },
 ];
 
 let rejectTarget = null;
@@ -188,6 +288,30 @@ async function loadRecords(page = 1) {
   }
 }
 
+async function loadVisits(page = 1) {
+  visitLoading.value = true;
+  try {
+    const [begin, end] = Array.isArray(visitQuery.range) ? visitQuery.range : [];
+    const body = {
+      current: page,
+      pageSize: visitPagination.pageSize,
+      keyword: visitQuery.keyword?.trim() || undefined,
+      visitCount: visitQuery.visitCount ?? undefined,
+      pending: visitQuery.pending ?? undefined,
+      beginTime: begin ? formatBackendDateTime(begin) : undefined,
+      endTime: end ? formatBackendDateTime(end) : undefined,
+    };
+    const res = await adoptionApi.adoptionVisitAdminPage(body);
+    visitRows.value = res.records || [];
+    visitPagination.total = Number(res.total) || 0;
+    visitPagination.current = page;
+  } catch (e) {
+    Message.error(e?.message || '加载回访记录失败');
+  } finally {
+    visitLoading.value = false;
+  }
+}
+
 function onApplyPage(page) {
   loadApplies(page);
 }
@@ -204,6 +328,28 @@ function onRecordPage(page) {
 function onRecordPageSize(size) {
   recordPagination.pageSize = size;
   loadRecords(1);
+}
+
+function onVisitPage(page) {
+  loadVisits(page);
+}
+
+function onVisitPageSize(size) {
+  visitPagination.pageSize = size;
+  loadVisits(1);
+}
+
+function onVisitSearch(e) {
+  e?.preventDefault?.();
+  loadVisits(1);
+}
+
+function resetVisitQuery() {
+  visitQuery.keyword = '';
+  visitQuery.visitCount = undefined;
+  visitQuery.pending = undefined;
+  visitQuery.range = [];
+  loadVisits(1);
 }
 
 function formatBackendDateTime(d) {
@@ -281,6 +427,7 @@ async function confirmVisit() {
 onMounted(() => {
   loadApplies(1);
   loadRecords(1);
+  loadVisits(1);
 });
 </script>
 
@@ -289,6 +436,11 @@ onMounted(() => {
   background: #fff;
   border-radius: 12px;
   padding: 16px;
+  border: 1px solid var(--bili-line, #e8e8ef);
+}
+.visit-toolbar {
+  background: linear-gradient(180deg, rgba(251, 114, 153, 0.06), rgba(255, 255, 255, 0));
+  border-radius: 12px;
   border: 1px solid var(--bili-line, #e8e8ef);
 }
 .muted {

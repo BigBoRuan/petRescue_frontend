@@ -73,10 +73,23 @@
           <a-tag v-if="record.applyStatus === 'PENDING'" color="orange">待审核</a-tag>
           <a-tag v-else-if="record.applyStatus === 'APPROVED'" color="green">已通过</a-tag>
           <a-tag v-else-if="record.applyStatus === 'REJECTED'" color="red">已拒绝</a-tag>
+          <a-tag v-else-if="record.applyStatus === 'CANCELLED'" color="gray">已撤销</a-tag>
           <span v-else>{{ record.applyStatus }}</span>
         </template>
         <template #applyTime="{ record }">
           {{ formatDateTime(record.applyTime) }}
+        </template>
+        <template #applyActions="{ record }">
+          <div @click.stop>
+            <a-popconfirm
+              v-if="record.applyStatus === 'PENDING'"
+              content="确认撤销该领养申请？撤销后需重新提交才可再次申请。"
+              @ok="cancelMyApply(record)"
+            >
+              <a-button type="text" status="warning" size="small">撤销</a-button>
+            </a-popconfirm>
+            <span v-else class="muted">—</span>
+          </div>
         </template>
       </a-table>
 
@@ -248,6 +261,7 @@ const applyCols = [
   { title: '状态', slotName: 'applyStatus', width: 100 },
   { title: '拒绝原因', dataIndex: 'rejectReason', ellipsis: true, tooltip: true },
   { title: '申请时间', slotName: 'applyTime', width: 178 },
+  { title: '操作', slotName: 'applyActions', width: 80, fixed: 'right' },
 ];
 
 const petCols = [
@@ -272,6 +286,16 @@ async function loadAdoptionData() {
     myPets.value = [];
   } finally {
     adoptLoading.value = false;
+  }
+}
+
+async function cancelMyApply(record) {
+  try {
+    await adoptionApi.adoptionApplyMyCancel(record.id);
+    Message.success('已撤销');
+    await loadAdoptionData();
+  } catch (e) {
+    Message.error(e?.message || '撤销失败');
   }
 }
 

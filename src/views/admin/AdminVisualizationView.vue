@@ -93,8 +93,22 @@ const treeRef = ref(null);
 /** @type {ReturnType<typeof echarts.init>[]} */
 const chartInstances = [];
 
+const NAME_COLOR = {
+  已领养: '#3b82f6', // 蓝
+  已取消: '#f97316', // 橙（与已领养区分）
+  已救助: '#22c55e', // 绿
+  待处理: '#a855f7', // 紫
+  待领养: '#10b981', // 青绿
+  领养中: '#10b981',
+  已归档: '#64748b', // 灰蓝
+};
+
 function pieOption(title, items) {
-  const raw = (items || []).map((i) => ({ name: i.name, value: Number(i.value) || 0 }));
+  const raw = (items || []).map((i) => ({
+    name: i.name,
+    value: Number(i.value) || 0,
+    itemStyle: NAME_COLOR[i.name] ? { color: NAME_COLOR[i.name] } : undefined,
+  }));
   // ECharts 饼图在大量 0 值时观感怪异（仍占 legend/tooltip），这里过滤 0 值。
   const data = raw.filter((d) => d.value > 0);
   return {
@@ -138,6 +152,7 @@ function lineOption(trend) {
         symbol: 'circle',
         symbolSize: 8,
         data: archives,
+        itemStyle: { color: '#22c55e' },
         lineStyle: { width: 3 },
       },
       {
@@ -147,6 +162,7 @@ function lineOption(trend) {
         symbol: 'circle',
         symbolSize: 8,
         data: adopts,
+        itemStyle: { color: NAME_COLOR.已领养 },
         lineStyle: { width: 3 },
       },
     ],
